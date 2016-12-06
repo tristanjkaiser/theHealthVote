@@ -23,6 +23,8 @@ g <- list(
 df <- read_csv("U.S._Chronic_Disease_Indicators__CDI_.csv") %>%
   mutate(LocationAbbr = paste("US-", LocationAbbr, sep=""))
 
+voteData <- read_csv("clean/Pres_Election_Data_2016i.csv")
+
 # See list of questions
 questions <- df %>%
   distinct(Question, QuestionID)
