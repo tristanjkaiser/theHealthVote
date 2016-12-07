@@ -1,62 +1,51 @@
-# U.S. Chronic Disease Indicators (CDI)
+# theHealthVote
 # By: Tristan Kaiser
-# 12/1/2016
+# 12/6/2016
 
 library(stringr)
 library(tidyverse)
 library(plotly)
 library(RColorBrewer)
 
-setwd("data")
-
-# Plotly details
-
-l <- list(color = toRGB("grey"), width = 0.5)
-g <- list(
-  scope = 'usa',
-  projection = list(type = 'albers usa'),
-  showlakes = TRUE,
-  lakecolor = toRGB('white'))
+#Data_Value	Description
+#-9999	Indicate N.A. value from the source data for the Unemployed column on the VUNERABLEPOPSANDENVHEALTH page
+#-2222 or -2222.2 or -2	nda, no data available, see Data Notes document for details
+#-1111.1 or -1111 or -1	nrf, no report, see Data Notes document for details
 
 #-------------------
+# Load Summary Measures of Health, voting data, join, clean
 
-df <- read_csv("U.S._Chronic_Disease_Indicators__CDI_.csv") %>%
-  mutate(LocationAbbr = paste("US-", LocationAbbr, sep=""))
+riskFactors <- read_csv("data/RISKFACTORSANDACCESSTOCARE.csv") %>%
+  mutate(County_FIPS_Code = as.numeric(County_FIPS_Code),
+         State_FIPS_Code = as.numeric(State_FIPS_Code))
 
-voteData <- read_csv("clean/Pres_Election_Data_2016i.csv")
+voteData <- read_csv("data/clean/Pres_Election_Data_2016i.csv") %>%
+  rename(County_FIPS_Code = COUNTY, State_FIPS_Code = STATEFIPS)
 
-# See list of questions
-questions <- df %>%
-  distinct(Question, QuestionID)
+demographics <- read_csv("data/DEMOGRAPHICS.csv") %>%
+  mutate(County_FIPS_Code = as.numeric(County_FIPS_Code),
+         State_FIPS_Code = as.numeric(State_FIPS_Code))
 
-# Drill down to Cancer data
-cancer.topics <- df %>%
-  filter(Topic == "Cancer",
-         str_detect(Question, "incidence"),
-         DataValueUnit == "per 100,000",
-         DataValueTypeID == "AvgAnnAgeAdjRate")
+leadingCausesOfDeath <- read_csv("data/LEADINGCAUSESOFDEATH.csv") %>%
+  mutate(County_FIPS_Code = as.numeric(County_FIPS_Code),
+         State_FIPS_Code = as.numeric(State_FIPS_Code))
 
-# All cancer incidence
-allCancer <- cancer.topics %>%
-  filter(QuestionID == "CAN4_1",
-         LocationAbbr != "DC",
-         LocationAbbr != "US") %>%
-  mutate(DataValue = as.numeric(DataValue))
+relativeHealthImportance <- read_csv("data/LEADINGCAUSESOFDEATH.csv") %>%
+  mutate(County_FIPS_Code = as.numeric(County_FIPS_Code),
+         State_FIPS_Code = as.numeric(State_FIPS_Code))
 
-# Map Cancer incidence across US
-p <- plot_geo(allCancer, locationmode = 'USA-states') %>%
-  add_trace(
-    z = ~DataValue, 
-    color = ~DataValue, 
-    colors = c("white", "#ef3b2c", "#67000d"),
-    text = ~LocationDesc, 
-    locations = ~LocationAbbr, 
-    marker = list(line = l)
-  ) %>%
-  colorbar(title = 'Incidence per 100,000') %>%
-  layout(
-    title = 'Melanoma Incidence in the United States <br> Source: Data.gov',
-    geo = g
-  )
-p
+df <- inner_join(riskFactors, voteData, by = c("County_FIPS_Code", "State_FIPS_Code"))
 
+df[df == "-1111.1"] <- NA
+df[df == "-1111"] <- NA
+df[df == "-2222"] <- NA
+df[df == "-2222.2"] <- NA
+df[df == "-9999"] <- NA
+df[df == "-1"] <- NA
+df[df == "-2"] <- NA
+
+# Do Trump and Clinton voters eat their vegetables?
+ggplot(df, aes(x = Few_Fruit_Veg, y = vote_difference)) +
+  geom_point(aes(colour = victor)) +
+  labs(x = "Few Fruits/Vegetables Consumed", y = "Vote differential (Trump = positive)") +
+  theme_minimal()

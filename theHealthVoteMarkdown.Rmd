@@ -1,0 +1,50 @@
+---
+title: "The Health Vote"
+author: "Tristan Kaiser"
+date: "December 7, 2016"
+output: html_document
+---
+
+## R The Health Vote
+
+This document will walk through an analysis of how people voted in the 2016 Presidential election by county, and various health-related measures.
+
+#### Loading and cleaning the data
+
+```{r, echo=T, message=F, warning=FALSE}
+library(tidyverse)
+```
+
+The election and health data is all at the county level. Here the data is joined by State and County FIPS code.
+```{r, message=F, warning=F, eval=T}
+setwd("data")
+voteData <- read_csv("clean/Pres_Election_Data_2016i.csv") %>%
+  rename(County_FIPS_Code = COUNTY, State_FIPS_Code = STATEFIPS)
+
+riskFactors <- read_csv("RISKFACTORSANDACCESSTOCARE.csv") %>%
+  mutate(County_FIPS_Code = as.numeric(County_FIPS_Code),
+         State_FIPS_Code = as.numeric(State_FIPS_Code))
+
+df <- inner_join(riskFactors, voteData, by = c("County_FIPS_Code", "State_FIPS_Code"))
+
+df[df == "-1111.1"] <- NA
+df[df == "-1111"] <- NA
+df[df == "-2222"] <- NA
+df[df == "-2222.2"] <- NA
+df[df == "-9999"] <- NA
+df[df == "-1"] <- NA
+df[df == "-2"] <- NA
+
+```
+#### Exploring the data
+
+Do Hillary and Trump voters eat their vegetables?
+
+```{r, message=F, warning=F, eval=T}
+
+ggplot(df, aes(x = Few_Fruit_Veg, y = vote_difference)) +
+  geom_point(aes(colour = victor)) +
+  labs(x = "Few Fruits/Vegetables Consumed", y = "Vote differential (Trump = positive)")
+  theme_minimal()
+
+```
