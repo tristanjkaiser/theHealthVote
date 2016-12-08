@@ -44,7 +44,7 @@ Do Hillary and Trump voters eat their vegetables?
 
 ggplot(df, aes(x = Few_Fruit_Veg, y = vote_difference)) +
   geom_point(aes(colour = victor)) +
-  labs(x = "Few Fruits/Vegetables Consumed", y = "Vote differential (Trump = positive)")
+  labs(x = "Few Fruits/Vegetables Consumed", y = "Vote differential (Trump = positive)") +
   theme_minimal()
-
 ```
+
