@@ -13,6 +13,7 @@ This document will walk through an analysis of how people voted in the 2016 Pres
 
 ```{r, echo=T, message=F, warning=FALSE}
 library(tidyverse)
+library(magrittr)
 ```
 
 The election and health data is all at the county level. Here the data is joined by State and County FIPS code.
@@ -25,7 +26,18 @@ riskFactors <- read_csv("RISKFACTORSANDACCESSTOCARE.csv") %>%
   mutate(County_FIPS_Code = as.numeric(County_FIPS_Code),
          State_FIPS_Code = as.numeric(State_FIPS_Code))
 
-df <- inner_join(riskFactors, voteData, by = c("County_FIPS_Code", "State_FIPS_Code"))
+fips_codes <- read_csv("fips_codes_website.csv") %>%
+  mutate(County_FIPS_Code = `County FIPS Code`,
+       State_FIPS_Code = `State FIPS Code`,
+       combined_code =  paste(State_FIPS_Code, County_FIPS_Code, sep = ""))
+       
+fips_codes %<>% 
+       mutate(County_FIPS_Code = as.numeric(County_FIPS_Code),
+       State_FIPS_Code = as.numeric(State_FIPS_Code))
+
+df <- left_join(riskFactors, voteData, by = c("County_FIPS_Code", "State_FIPS_Code"))
+df <- left_join(df, fips_codes, by = c("County_FIPS_Code", "State_FIPS_Code"))
+
 
 df[df == "-1111.1"] <- NA
 df[df == "-1111"] <- NA
@@ -36,7 +48,24 @@ df[df == "-1"] <- NA
 df[df == "-2"] <- NA
 
 ```
-#### Exploring the data
+### Exploring the data
+
+Vote Map
+```{r, message=F, warning=F, eval=T}
+library(choroplethr)
+library(choroplethrMaps)
+
+df2 <- df
+df2 %<>% dplyr::rename(region = combined_code)
+df2 %<>% dplyr::rename(value = vote_difference)
+df2 %<>% mutate(region = as.numeric(region))
+df2 %<>% distinct(region, .keep_all = TRUE)
+?county_choropleth
+county_choropleth(df2,
+                  title      = "2016 Presidential Vote Difference",
+                  legend     = "Vote Difference",
+                  num_colors = 7)
+```
 
 Do Hillary and Trump voters eat their vegetables?
 

@@ -1,12 +1,9 @@
 # theHealthVote
 # By: Tristan Kaiser
-# 12/8/2016
-# Testing SourceTree
-
-install.packages("choroplethr")
+# 12/27/2016
 
 library(choroplethr)
-library(choroplethrMap)
+library(choroplethrMaps)
 library(stringr)
 library(tidyverse)
 library(RColorBrewer)
@@ -67,19 +64,17 @@ df[df == "-2"] <- NA
 # does not support county-level data
 # Must rename County_FIPS_Code to "region" and the value column "value"
 
-df %<>% dplyr::rename(region = combined_code)
-
-df %<>% dplyr::rename(value = vote_difference)
-df %<>% mutate(region = as.numeric(region))
-
-df %<>% distinct(region)
-
-str(df)
-
-county_choropleth(df,
+#### Vote Map ####
+df2 <- df
+df2 %<>% dplyr::rename(region = combined_code)
+df2 %<>% dplyr::rename(value = vote_difference)
+df2 %<>% mutate(region = as.numeric(region))
+df2 %<>% distinct(region, .keep_all = TRUE)
+?county_choropleth
+county_choropleth(df2,
                   title      = "2016 Presidential Vote Difference",
                   legend     = "Vote Difference",
-                  num_colors = 1)
+                  num_colors = 7)
 
 # Do Trump and Clinton voters eat their vegetables?
 ggplot(df, aes(x = Few_Fruit_Veg, y = vote_difference)) +
@@ -87,5 +82,6 @@ ggplot(df, aes(x = Few_Fruit_Veg, y = vote_difference)) +
   labs(x = "Few Fruits/Vegetables Consumed", y = "Vote differential (Trump = positive)") +
   theme_minimal()
 
+#### Nearest Neighbors ####
 
 
