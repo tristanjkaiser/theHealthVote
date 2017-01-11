@@ -2,7 +2,9 @@
 title: "The Health Vote"
 author: "Tristan Kaiser"
 date: "December 7, 2016"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ## R The Health Vote
